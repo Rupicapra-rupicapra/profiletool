@@ -38,6 +38,12 @@ import platform
 import sys
 from PyQt4.QtCore import SIGNAL,SLOT,pyqtSignature
 
+has_dxfwrite = False
+try:
+	from dxfwrite import DXFEngine as dxf
+	has_dxfwrite = True
+except:
+	pass
 
 class DoProfile(QWidget):
 
@@ -64,7 +70,7 @@ class DoProfile(QWidget):
 	def removeClosedLayers(self, model1):
 		qgisLayerNames = []
 		for i in range(0, self.iface.mapCanvas().layerCount()):
-				qgisLayerNames.append(self.iface.mapCanvas().layer(i).name())
+			qgisLayerNames.append(self.iface.mapCanvas().layer(i).name())
 
 		for i in range(0 , model1.rowCount()):
 			layerName = model1.item(i,2).data(Qt.EditRole)
@@ -107,6 +113,7 @@ class DoProfile(QWidget):
 		self.groupBox = []
 		self.profilePushButton = []
 		self.coordsPushButton = []
+		self.dxfPushButton = []
 		self.tableView = []
 		self.verticalLayout = []
 		for i in range(0 , model1.rowCount()):
@@ -163,12 +170,22 @@ class DoProfile(QWidget):
 			self.coordsPushButton[i].setObjectName(str(i))
 			self.horizontalLayout.addWidget(self.coordsPushButton[i])
 
+                 # button to export to DXF
+                 self.dxfPushButton.append(QPushButton(self.groupBox[i]))
+                 sizePolicy.setHeightForWidth(self.dxfPushButton[i].sizePolicy().hasHeightForWidth())
+                 self.dxfPushButton[i].setSizePolicy(sizePolicy)
+                 self.dxfPushButton[i].setText(QApplication.translate("GroupBox", "Export to DXF", None, QApplication.UnicodeUTF8))
+                 self.dxfPushButton[i].setObjectName(str(i))
+                 self.horizontalLayout.addWidget(self.dxfPushButton[i])
+
 			self.horizontalLayout.addStretch(0)
 			self.verticalLayout[i].addLayout(self.horizontalLayout)
 
 			self.VLayout.addWidget(self.groupBox[i])
-			QObject.connect(self.profilePushButton[i], SIGNAL("clicked()"), self.copyTable)
-			QObject.connect(self.coordsPushButton[i], SIGNAL("clicked()"), self.copyTableAndCoords)
+                 self.profilePushButton[i].clicked.connect(self.copyTable)
+                 self.coordsPushButton[i].clicked.connect(self.copyTableAndCoords)
+			#QObject.connect(self.profilePushButton[i], SIGNAL("clicked()"), self.copyTable)
+			#QObject.connect(self.coordsPushButton[i], SIGNAL("clicked()"), self.copyTableAndCoords)
 
 
 
@@ -188,6 +205,26 @@ class DoProfile(QWidget):
 			text += str(self.profiles[nr]["l"][i]) + "\t" + str(self.profiles[nr]["x"][i]) + "\t"\
                  + str(self.profiles[nr]["y"][i]) + "\t" + str(self.profiles[nr]["z"][i]) + "\n"
 		self.clipboard.setText(text)
+
+        def exportDXF(self):
+            if has_DXF:
+                # Drawing initialization
+                dxfFileName = QFileDialog.getSaveFileName(0, "Save DXF File", ".", "Drawing eXchange Format (*.dxf)")
+                drawing = dxf.drawing(dxfFileName)
+                drawing.add_layer('Profile')
+                profile = dxf.polyline()
+                profile['layer'] = 'Profile'
+
+                # Getting points coordinates (in 2D)
+                nr = int(self.sender().objectName())
+                vertices = []
+                for i in range(len(self.profiles[nr]["l"])):
+                    vertices.append((profiles[nr]["l"][i], profiles[nr]["z"][i]))
+
+                profile.add_vertices(vertices)
+                drawing.add(profile)
+                drawing.save()
+
 
 
 	def reScalePlot(self, param): 						# called when a spinbox value changed
