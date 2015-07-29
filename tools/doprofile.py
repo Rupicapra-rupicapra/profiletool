@@ -209,9 +209,10 @@ class DoProfile(QWidget):
 		self.clipboard.setText(text)
 
 	def exportDXF(self):
-		if has_DXF:
+		if has_dxfwrite:
 			# Drawing initialization
-			dxfFileName = QFileDialog.getSaveFileName(0, "Save DXF File", ".", "Drawing eXchange Format (*.dxf)")
+			dxfFileName = QFileDialog.getSaveFileName(self, "Save DXF File", "Profile.dxf", "Drawing eXchange Format (*.dxf)")
+			dxfFileName = "Profile.dxf"
 			drawing = dxf.drawing(dxfFileName)
 			drawing.add_layer('Profile')
 			profile = dxf.polyline()
@@ -226,6 +227,7 @@ class DoProfile(QWidget):
 			profile.add_vertices(vertices)
 			drawing.add(profile)
 			drawing.save()
+			QMessageBox.information(self, "Profile saved", "Your profile was saved")
 
 
 
