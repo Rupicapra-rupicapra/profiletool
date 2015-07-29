@@ -212,7 +212,6 @@ class DoProfile(QWidget):
 		if has_dxfwrite:
 			# Drawing initialization
 			dxfFileName = QFileDialog.getSaveFileName(self, "Save DXF File", "Profile.dxf", "Drawing eXchange Format (*.dxf)")
-			dxfFileName = "Profile.dxf"
 			drawing = dxf.drawing(dxfFileName)
 			drawing.add_layer('Profile')
 			profile = dxf.polyline()
